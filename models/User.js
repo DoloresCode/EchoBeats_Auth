@@ -24,14 +24,21 @@ const userSchema = new mongoose.Schema(
         password: {
           type: String,
           required: [true, "Please provide a password"],
-          minLength: [12, "A minimum 6 characters password is required"],
+          minLength: [12, "A minimum 12 characters password is required"],
         },
       },
       {
         timestamps: true,
+        toJSON: {
+          virtuals: true,
+          // ret is the returned Mongoose document
+          transform: (_doc, ret) => {
+            delete ret.password;
+            return ret;
+          },
+        },
       }
     );
 
-// creates a user collection in my databas in MongoDB
+// creates a user collection in the database in MongoDB
 module.exports = mongoose.model("User", userSchema);
-

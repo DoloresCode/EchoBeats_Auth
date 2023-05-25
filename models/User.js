@@ -1,5 +1,8 @@
 // find and connect to the database
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const Joi = require("joi"); //imporet joi
+const passwordComplexity = require("joi-password-complexity"); //make sure to give the name of the package call
 
 // User Schema
 const userSchema = new mongoose.Schema(
@@ -26,19 +29,26 @@ const userSchema = new mongoose.Schema(
       required: [true, "Please provide a password"],
       minLength: [12, "A minimum 12 characters password is required"],
     },
-  },
-  {
-    timestamps: true,
-    toJSON: {
-      virtuals: true,
-      // ret is the returned Mongoose document
-      transform: (_doc, ret) => {
-        delete ret.password
-        return ret
-      },
-    },
-  }
-)
+});
 
-// creates a user collection in the database in MongoDB
-module.exports = mongoose.model("User", userSchema)
+userSchema.methods.generateAuthToken = function () {
+    const token = jwt.sign(
+        { _id: this._id, name: this.name },
+        process.env.JWT_SECRET_KEY,{ expiresIn:"7d"}
+    );
+    return token;
+};
+
+const User = mongoose.model("user", userSchema);
+
+const approve = (userData) => {
+    const schema = Joi.object({
+        firstName: Joi.string().required().label("First Name"),
+        lastName: Joi.string().required().label("Last Name"),
+        email: Joi.string().email().required().label("Email"),
+        password: passwordComplexity().required().label("Password"),
+    });
+    return schema.approve(userData);
+};
+
+module.exports = { User, approve };

@@ -7,7 +7,9 @@ const methodOverride = require('method-override');
 const PORT = 4000;
 
 // Require the user resource routes and controllers
+const userController = require("./controllers/users");
 const authController = require("./controllers/auth");
+
 
 //Middlewares
 app.use(express.json()); // help to submit the data from page to page with form
@@ -16,8 +18,10 @@ app.use(express.urlencoded({ extended: true}));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
+
 // Use the auth routes
-app.use('/auth', authController);
+app.use('/api/users', authController);
+app.use('/api/auth', authController);
 
 app.get('/', (req, res) => {
     res.send('default route - functional');

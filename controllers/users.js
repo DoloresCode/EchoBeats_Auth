@@ -1,8 +1,8 @@
 // Modules Importation
-const router = express.Router();
 const { User, approve } = require("../models/User"); // User Model and validation function
 const bcrypt = require("bcrypt"); //Bcrypt for password hashing
 const express = require("express");
+const router = express.Router();
 // const auth = require("../middleware/auth");
 
 

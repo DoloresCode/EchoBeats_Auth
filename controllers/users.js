@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt"); //Bcrypt for password hashing
 const express = require("express");
 // const auth = require("../middleware/auth");
 
+
+// POST /auth/Register-Signup
 router.post("/", async (req, res) => {
     try {
         // Validate the request body with the approve function imported from User model

@@ -1,79 +1,48 @@
 // Require the necessary modules
 const express = require("express")
+const { User } = require("../models/User")
 const bcrypt = require("bcrypt")
-const User = require("../models/User")
+const Joi = require("joi");
 const { createUserToken } = require("../middleware/auth");
+const router = express.Router(); // Create a new router
 
-// Create a new router
-const router = express.Router()
 
-// SIGN UP
-// POST /auth/signup
-router.post("/signup", async (req, res, next) => {
-  const { firstName, lastName, email, password } = req.body
-
-  try {
-    // Hash the password
-    const salt = await bcrypt.genSalt(10)
-    const passwordHash = await bcrypt.hash(req.body.password, salt)
-
-    const pwStore = req.body.password
-    // we store this temporarily so the origin plain text password can be parsed by the createUserToken();
-
-    req.body.password = passwordHash
-    // modify req.body (for storing hash in db)
-
-    // Create a new user with the hashed password and the rest of the info in the db
-    const newUser = await User.create({
-      firstName,
-      lastName,
-      email,
-      password: passwordHash, // store hashed password in the database
-    })
-
-    if (newUser) {
-      req.body.password = pwStore
-      const authenticatedUserToken = createUserToken(req, newUser)
-      // Send a response
-      res.status(201).json({
-        user: newUser,
-        isLoggedIn: true,
-        token: authenticatedUserToken,
-      })
-    } else {
-      res.status(400).json({ error: "Something went wrong" })
-    }
-  } catch (err) {
-    res.status(400).json({ error: err.message })
-  }
-})
-
-// SIGN IN
 // POST /auth/login
-router.post("/login", async (req, res, next) => {
-  try {
-    const loggingEmail = req.body.email
-    const foundUser = await User.findOne({ email: loggingEmail })
+router.post("/", async (req, res) => {
+    try {
+    // Validate the request body with the approve function imported from User model
+    const { error } = approve(req.body);
+    // If there's an error in validation, send a 400 status code with error message
+    if (error) return res.status(400).send({message:error.details[0].message});
 
-    // check if the password is correct
-    const isPasswordCorrect = await bcrypt.compare(
-      req.body.password,
-      foundUser.password
-    )
-    if (!isPasswordCorrect) {
-      throw new Error("Invalid credentials")
-    }
+    // if absence of error, check if the user with the same email address already exist
+    const user = await User.findOne({email:req.body.email});
+// If user does not exist, send a 401 status code with an error message
+if (!user)
+return res.status(401).send({message:"Invalid password or email"});
 
-    const token = await createUserToken(req, foundUser)
-    res.status(200).json({
-      user: foundUser,
-      isLoggedIn: true,
-      token,
-    })
-  } catch (err) {
-    res.status(401).json({ error: err.message })
-  }
-})
+const validPassword = await bcrypt.compare(
+    req.body.password, user.password
+);
+if (!validPassword)
+            return res.status(401).send("Invalid email or password");
 
-// Export the router
-module.exports = router
+            // If email and password are valide generate a token
+            const userToken = user.generateAuthToken();
+            res.status(200).send({data:userToken, message: "Logged in successfully"})
+        } catch (error) {
+            res.status(500).send({message:"An error occured with the internal server"});
+        }
+    });
+
+
+const approve = (userData) => {
+    const schema = Joi.object({
+        email: Joi.string().email().required().label("Email"),
+        password: Joi.string().required().label("Password"),
+    });
+    return schema.approve(userData);
+};
+
+// Export the router to be used in the main server file
+module.exports = router;

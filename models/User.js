@@ -43,12 +43,14 @@ const User = mongoose.model("user", userSchema);
 
 const approve = (userData) => {
     const schema = Joi.object({
-        firstName: Joi.string().required().label("First Name"),
-        lastName: Joi.string().required().label("Last Name"),
-        email: Joi.string().email().required().label("Email"),
-        password: passwordComplexity().required().label("Password"),
+        firstname: Joi.string().required().label("firstname"),
+        lastname: Joi.string().required().label("lastname"),
+        email: Joi.string().email().required().label("email"),
+        password: passwordComplexity().required().label("password"),
     });
-    return schema.approve(userData);
+    return schema.validate(userData);
 };
 
 module.exports = { User, approve };
+
+// https://joi.dev/api/?v=17.9.1

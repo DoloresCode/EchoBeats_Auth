@@ -78,10 +78,10 @@ router.post("/signup", async (req, res) => {
 
 router.get("/logout", requireToken, async (req, res, next) => {
   try {
-    const currentUser = req.user.username
+    const currentUser = req.user
     res.status(200).json({
-      message: `${currentUser} logged out successfully`,
-      isLoggedIn: false,
+      message: `${currentUser.firstname} ${currentUser.lastname} logged out successfully`,
+      isoggedIn: false,
       token: "",
     })
   } catch (err) {
